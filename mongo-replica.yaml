@@ -1,0 +1,150 @@
+#replicaset name = juspay_mongo
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-0
+  labels:
+    name: mongo-svc
+spec:
+  clusterIP: None
+  ports:
+  - port: 27017
+    targetPort: 27017
+    protocol: TCP
+    name: mongo-svc-port
+  selector:
+    name: mongo-node-0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-1
+  labels:
+    name: mongo-svc
+spec:
+  clusterIP: None
+  ports:
+  - port: 27017
+    targetPort: 27017
+    protocol: TCP
+    name: mongo-svc-port
+  selector:
+    name: mongo-node-1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-2
+  labels:
+    name: mongo-svc
+spec:
+  clusterIP: None
+  ports:
+  - port: 27017
+    targetPort: 27017
+    protocol: TCP
+    name: mongo-svc-port
+  selector:
+    name: mongo-node-2
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: mongo-rc0
+  labels:
+    name: mongo-replica-rc
+spec:
+  replicas: 1
+  selector:
+    name: mongo-node-0
+  template:
+    metadata:
+      labels:
+        name: mongo-node-0
+    spec:
+      containers:
+      - name: mongo-node-0
+        image: hyge/mongo-cluster
+        env:
+          - name: mongo_node_name
+            value: mongo
+          - name: mongo_nodes_number
+            value: "3"
+          - name: mongo_replica_set_name
+            value: juspay_mongo
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: mongo-replica-storage0
+          mountPath: /data/db
+      volumes:
+      - name: mongo-replica-storage0
+        emptyDir: {}
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: mongo-rc1
+  labels:
+    name: mongo-replica-rc
+spec:
+  replicas: 1
+  selector:
+    name: mongo-node-1
+  template:
+    metadata:
+      labels:
+        name: mongo-node-1
+    spec:
+      containers:
+      - name: mongo-node-1
+        image: hyge/mongo-cluster
+        env:
+          - name: mongo_node_name
+            value: mongo
+          - name: mongo_nodes_number
+            value: "3"
+          - name: mongo_replica_set_name
+            value: juspay_mongo
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: mongo-replica-storage1
+          mountPath: /data/db
+      volumes:
+      - name: mongo-replica-storage1
+        emptyDir: {}
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: mongo-rc2
+  labels:
+    name: mongo-replica-rc
+spec:
+  replicas: 1
+  selector:
+    name: mongo-node-2
+  template:
+    metadata:
+      labels:
+        name: mongo-node-2
+    spec:
+      containers:
+      - name: mongo-node-2
+        image: hyge/mongo-cluster
+        env:
+          - name: mongo_node_name
+            value: mongo
+          - name: mongo_nodes_number
+            value: "3"
+          - name: mongo_replica_set_name
+            value: juspay_mongo
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: mongo-replica-storage2
+          mountPath: /data/db
+      volumes:
+      - name: mongo-replica-storage2
+        emptyDir: {}

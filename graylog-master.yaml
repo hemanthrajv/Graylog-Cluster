@@ -1,0 +1,51 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gl-master
+  labels:
+    component: graylog
+    role: master
+    type: cluster
+spec:
+  template:
+    metadata:
+      labels:
+        component: graylog
+        role: master
+        type: cluster
+    spec:
+      containers:
+      - name: gl-master
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - IPC_LOCK
+        image: graylog2/server
+        imagePullPolicy: Always
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: GRAYLOG_MONGODB_URI
+          value: "mongodb://mongo-0:27017,mongo-1:27017,mongo-2:27017/graylog?replicaSet=juspay_mongo"
+        - name: GRAYLOG_WEB_ENDPOINT_URI
+          value: "Load-Balancer-DNS/api"
+        - name: GRAYLOG_ELASTICSEARCH_CLUSTER_NAME
+          value: "juspay_es"
+        - name: GRAYLOG_ELASTICSEARCH_DISCOVERY_ZEN_PING_UNICAST_HOSTS
+          value: "elasticsearch-discovery.test.svc.cluster.local:9300"
+        - name: GRAYLOG_REST_TRANSPORT_URI
+          value: "Load-Balancer-DNS/api"
+        ports:
+        - containerPort: 9000
+          name: gl-master
+          protocol: TCP
+        volumeMounts:
+        - name: storage
+          mountPath: /data
+      volumes:
+          - emptyDir:
+              medium: ""
+            name: "storage"
